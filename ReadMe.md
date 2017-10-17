@@ -1,0 +1,1 @@
+This is written in Mathematica. Including the built in function and self written luby algorithm.The graphs demonstrating the process could be obtained after running the program. You can change the graph matrix as well. In the end, I use the mathematica function to test the correctness of the program
