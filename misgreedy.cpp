@@ -70,16 +70,18 @@ struct Graph {
 
 void mis(Graph& G) 
 	{
-	int r=rand()%G.n_vertices;
-	int i;
+	int r1=rand()%G.n_vertices;
+	int r2=rand()%G.n_vertices;
+	int i,j;
 	for(int it=0;it<G.n_vertices;++it) //iterate over all the vertices of the graph
 		{
-		i=(it+r)%G.n_vertices;
+		i=(it+r1)%G.n_vertices;
 		if (G.vertices[i]!=0) //if the current vertex is still in the remaining set
 			{ 
 			//greedily remove all its neighbours if they are still in the remaining set
-			for(int j=0;j<G.n_vertices;++j) //iterate over all the neighbours of the current vertex
+			for(int jt=0;jt<G.n_vertices;++jt) //iterate over all the neighbours of the current vertex
 				{
+				j=(jt+r2)%G.n_vertices;
 				if(G.edges[i][j]==1 && G.vertices[j]!=0)
 					G.vertices[j]=0;
 				}
