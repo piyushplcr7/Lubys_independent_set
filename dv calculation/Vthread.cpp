@@ -22,14 +22,14 @@ int main(int argc, char** argv) {
 		MPI_Get_count(&status,MPI_INT,&rec_row_N);
 		rec_row=new int[rec_row_N];		
 		MPI_Recv(rec_row,rec_row_N,MPI_INT,0,0,parentcomm,MPI_STATUS_IGNORE);
-		std::cout<<"I am the child number "<<rank<<" who received a row "<<std::endl;
+		//std::cout<<"I am the child number "<<rank<<" who received a row "<<std::endl;
 		//sequential calculation of dv (it maybe optimised)
 		for (int i=0;i<rec_row_N;++i)
 			dv+=rec_row[i];
 		//sending the dv data to parent process
 		MPI_Send(&dv,1,MPI_INT,0,2,parentcomm);
 		}	
-	
+	delete[] rec_row;
 	MPI_Finalize();
 	return 0;
 }
