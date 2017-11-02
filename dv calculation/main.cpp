@@ -1,37 +1,52 @@
 #include<iostream>
 #include<mpi.h>
+//#include<vector>
+#include<time.h>
+#include<cstdlib>
+//using std::vector;
 //main process, initializes V no. of processes which individually calculate the degree of one vertex and return it to the main process
 
 //Using the structure Graph (with array for vertices and matrix for edges)
 
 struct Graph {
 	public:
+	//no. of vertices
 	int n_vertices;
 	//Set of Vertices; contains 1 if vertex is in the graph and 0 if not in the graph
+	//vector<int> vertices;
 	int* vertices;
-	//std::array<int,n_vertices> vertices;
 	//set of Edges
-	//std::array<std:array<int,n_vertices>,n_vertices> edges;
+	//vector<vector<int> > edges;
 	int** edges;
 	//constructor
-	Graph(int n):n_vertices(n)
+	Graph(int n,double prob):n_vertices(n)//random graph G(n_vertices,prob) where prob is the probability that an edge exists
 		{
 		vertices=new int[n_vertices];
 		edges=new int*[n_vertices];
-		//create the matrix
-		for (int i=0;i<n_vertices;++i)
-			{
-			edges[i]=new int[n_vertices];
-			vertices[i]=1;
+		for (int i=0;i<n;++i)
+			{			
+			edges[i]=new int[n];
+			vertices[i]=1;			
 			}
-		};
+		//Try to seed the random number generator with a constant (makes debugging easier as we can obtain the same graph)
+		srand(7);
+		for (int i=0;i<n;++i)
+			{
+			for (int j=i;j<n;++j)
+				{
+				edges[i][j]=(rand()*1.0/RAND_MAX<prob);
+				edges[j][i]=edges[i][j];
+				}
+			edges[i][i]=0;
+			}
+		}
 	//destructor
 	~Graph(){
 		delete [] vertices;
 		for (int i = 0; i < n_vertices; ++i)
     		delete [] edges[i];
-		delete [] edges;
-		};
+		delete [] edges;		
+		}
 };
 
 
@@ -39,23 +54,11 @@ struct Graph {
 //main function
 int main(int argc, char** argv) {
 	//Test Graph
-	Graph G(8);
-	G.edges[1][4]=1; G.edges[4][1]=1;
-	G.edges[1][2]=1; G.edges[2][1]=1;
-	G.edges[1][0]=1; G.edges[0][1]=1;
-	G.edges[4][5]=1; G.edges[5][4]=1;
-	G.edges[4][7]=1; G.edges[7][4]=1;
-	G.edges[0][7]=1; G.edges[7][0]=1;
-	G.edges[5][2]=1; G.edges[2][5]=1;
-	G.edges[3][0]=1; G.edges[0][3]=1;
-	G.edges[6][3]=1; G.edges[3][6]=1;
-	G.edges[3][2]=1; G.edges[2][3]=1;
-	G.edges[5][6]=1; G.edges[6][5]=1;
-	G.edges[6][7]=1; G.edges[7][6]=1;
-
-	//int rank,size;
+	int n_v=20; //no. of vertices for the random graph
+	double prob=.5; //probability for an edge to exist for the random graph
+	Graph G(n_v,prob); //random graph generator
 	double time;
-	int NP=8,temp;
+	int NP=n_v,temp; //NP is the no. of Vthreads to be spawned, equal to the no. of vertices
 	int errcodes[NP];
 	MPI_Status status;
 	MPI_Comm intercomm;
