@@ -1,6 +1,6 @@
 #include<iostream>
 #include<vector>
-#include <omp.h> 
+//#include <omp.h>
 #include<time.h>
 #include<cstdlib>
 #include<list>
@@ -47,7 +47,7 @@ using namespace std;
 		 }
 
 		/*Vertex(list<Vertex*>::iterator h)
-		{	
+		{
 			head=h;
 			//num_edges=0;
 		}
@@ -102,7 +102,7 @@ public:
 					(dest->edges).push_back(Edge(source));
 					(source->edges).back().same_edge=--dest->edges.end();
 					(dest->edges).back().same_edge=--source->edges.end();
-					//cout<<"add edge"<<((source->edges).back().same_edge->end->id)<<"\t"<<(dest->edges).back().same_edge->end->id<<endl;					
+					//cout<<"add edge"<<((source->edges).back().same_edge->end->id)<<"\t"<<(dest->edges).back().same_edge->end->id<<endl;
 				}
 			}
 			source->randval=rand();
@@ -111,7 +111,7 @@ public:
 	void showDegree()
 	{
 		for(list<Vertex>::iterator iter=vertices.begin();iter!=vertices.end();++iter)
-			cout<<"vertex"<<iter->id<<"degree"<<iter->edges.size()<<endl;		
+			cout<<"vertex"<<iter->id<<"degree"<<iter->edges.size()<<endl;
 	}
 	void set_randval()
 	{
@@ -182,7 +182,7 @@ public:
 
 int main(int argc, char** argv)
 {
-	int n_vertices=100;
+	int n_vertices=10000;
 	double prob=0.5;
 	Graph G(n_vertices,prob);
 	G.showDegree();
@@ -194,6 +194,7 @@ int main(int argc, char** argv)
     //time = -omp_get_wtime();
 
 	//#pragma omp parallel for
+	clock_t t_start = clock();
 			while(!G.isEmpty()){
 				cout<<"round"<<++i<<endl;
 				G.set_randval();
@@ -214,6 +215,8 @@ int main(int argc, char** argv)
 		std::cout<<"node"<<i<<"in MIS:\t"<<independent_set[i]<<std::endl;
 	cout<<chosen_set.size()<<endl;
 	//time += omp_get_wtime();
-	std::cout<<"it took time:"<<time<<std::endl; 
+	clock_t t_end = clock();
+	double exe_time = (double)(t_end - t_start) / CLOCKS_PER_SEC;
+	std::cout<<"it took time:"<<exe_time<<std::endl;
     return 0;
 }
