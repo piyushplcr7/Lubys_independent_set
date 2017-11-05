@@ -2,70 +2,55 @@
 #include<iostream>
 #include<array>
 #include<cstdlib>
-#include<ctime>
+#include<chrono>
 
-/* IGNORE THIS PART RIGHT NOW, ITS FOR IMPLEMENTING THE ADJACENCY LIST DATA STRUCTURE
-
-//structure for the vertex nodes of the adjacency list
-struct node_v{
-	public:
-	node* down;
-	node* up;
-	node* right;
-	const unsigned int vertex_id;
-
-	public:
-	//constructor to initialize the node with vertex_id with v and the pointers with NULL value
-	node_v(unsigned int v):vertex_id(v),down(NULL),up(NULL),right(NULL) {};
-	//Default destructor
-	~node_v{};
-};
-
-//structure for edge nodes of the adjacency list
-struct node_e{
-	public:
-	node* left;
-	node* right;
-	const unsigned int vertex_id;
-
-	public:
-	//constructor to initialize the node with vertex_id with v and the pointers with NULL value
-	node_e(unsigned int v):vertex_id(v),left(NULL),right(NULL) {};
-	//Default destructor
-	~node_e{};
-};
-
-void rm_v(node_v& v,node_v* head) {
-	//remove a vertex 
-
-}
-
-
-//Template struct for graph where Edges and Vertices can be represented as an adjacency list and matrix or simple 2 dimensional matrix and array
-//template <typename T>
-*/
 
 struct Graph {
 	public:
+	//no. of vertices
 	int n_vertices;
+	int n_edges;
 	//Set of Vertices; contains 1 if vertex is in the graph and 0 if not in the graph
-	int* vertices=new int[n_vertices];;	
-	//std::array<int,n_vertices> vertices;
+	//vector<int> vertices;
+	int* vertices;
 	//set of Edges
-	//std::array<std:array<int,n_vertices>,n_vertices> edges;
-	int** edges=new int*[n_vertices];;	
+	//vector<vector<int> > edges;
+	int** edges;
 	//constructor
-	Graph(int n):n_vertices(n){
-		for (int i=0;i<n_vertices;++i)
-			edges[i]=new int[n_vertices];
-						};
+	Graph(int n,double prob):n_vertices(n)//random graph G(n_vertices,prob) where prob is the probability that an edge exists
+		{
+		n_edges=0;
+		vertices=new int[n_vertices];
+		edges=new int*[n_vertices];
+		for (int i=0;i<n;++i)
+			{			
+			edges[i]=new int[n];
+			vertices[i]=1;			
+			}
+		//Try to seed the random number generator with a constant (makes debugging easier as we can obtain the same graph)
+		srand(7);
+		for (int i=0;i<n;++i)
+			{
+			for (int j=i+1;j<n;++j)
+				{
+				
+				edges[i][j]=(rand()*1.0/RAND_MAX<prob);
+				edges[j][i]=edges[i][j];
+				
+				n_edges+=edges[i][j];
+				}
+			edges[i][i]=0;
+			
+			}
+		
+		}
 	//destructor
 	~Graph(){
 		delete [] vertices;
 		for (int i = 0; i < n_vertices; ++i)
     		delete [] edges[i];
-		delete [] edges;
-		};
+		delete [] edges;		
+		}
 };
 
 void mis(Graph& G) 
@@ -93,8 +78,8 @@ void mis(Graph& G)
 int main() {
 	srand(time(0));
 	//initialization or construction of the target graph
-	Graph G(8);
-	for (int i=0; i<8;++i)
+	
+	/*for (int i=0; i<8;++i)
 		G.vertices[i]=1;
 	G.edges[1][4]=1; G.edges[4][1]=1;
 	G.edges[1][2]=1; G.edges[2][1]=1;
@@ -107,16 +92,19 @@ int main() {
 	G.edges[6][3]=1; G.edges[3][6]=1;
 	G.edges[3][2]=1; G.edges[2][3]=1;
 	G.edges[5][6]=1; G.edges[6][5]=1;
-	G.edges[6][7]=1; G.edges[7][6]=1;
+	G.edges[6][7]=1; G.edges[7][6]=1;*/
 
 	
 	//function to find the maximal independent set mis(G) {G is a graph object} which returns a set of vertices which constitute an independent set
- 	mis(G);
-	//verification of the correctness of algorithm
-	for (int j=0; j<8;++j)
+	for (int n=10;n<1000000;n=n+50)
 	{
-	if (G.vertices[j]!=0)
-		std::cout<<j<<std::endl;	
-	}	
+		Graph G(n,0.5);	
+		auto start = std::chrono::system_clock::now();
+	 	mis(G);
+		auto end = std::chrono::system_clock::now();
+		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+		std::cout <<G.n_vertices<<"	"<<G.n_edges<<"		"<< elapsed.count() << std::endl;
+	}
+
 	return 0;
 }
