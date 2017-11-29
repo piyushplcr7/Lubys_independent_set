@@ -5,6 +5,7 @@
 #include<cstdlib>
 #include<list>
 #include<iterator>
+#include<chrono>
 #define rep(i,a,b,c) for(int i=a;i<b;i+=c)
 
 //typedef list<int>::iterator Vertex
@@ -69,7 +70,7 @@ using namespace std;
 class Graph {
 public:
 
-	//int n_vertices;
+	int n_edges;
 	//Set of Vertices; contains 1 if vertex is in the graph and 0 if not in the graph
 	list<Vertex> vertices;
 	//std::array<int,n_vertices> vertices;
@@ -79,6 +80,7 @@ public:
 	//constructor
 	Graph(int n)
 	{
+		n_edges=0;
 		rep(i,0,n,1){
 			vertices.push_back(Vertex(i));
 			//(vertices+i)->edges=list<Edge>();
@@ -87,6 +89,7 @@ public:
 	}
 	Graph(int n,double prob)//random graph G(n_vertices,prob) where prob is the probability that an edge exists
 	{
+		n_edges=0;
 		//needs to be optimized
 		srand(time(NULL));
 		list<Vertex>::iterator source;
@@ -98,6 +101,7 @@ public:
 			for(dest=vertices.begin();dest!=source;++dest){
 				//edges[i][j]=(rand()*1.0/RAND_MAX<prob);
 				if(rand()*1.0/RAND_MAX<prob){
+					++n_edges;
 					(source->edges).push_back(Edge(dest));
 					(dest->edges).push_back(Edge(source));
 					(source->edges).back().same_edge=--dest->edges.end();
@@ -110,8 +114,13 @@ public:
 	}
 	void showDegree()
 	{
+<<<<<<< HEAD
+		//for(list<Vertex>::iterator iter=vertices.begin();iter!=vertices.end();++iter)
+			//cout<<"vertex"<<iter->id<<"degree"<<iter->edges.size()<<endl;		
+=======
 		for(list<Vertex>::iterator iter=vertices.begin();iter!=vertices.end();++iter)
 			cout<<"vertex"<<iter->id<<"degree"<<iter->edges.size()<<endl;
+>>>>>>> ce1611e117f41f8764e7058aa5562dd09f345c77
 	}
 	void set_randval()
 	{
@@ -138,7 +147,7 @@ public:
 	}
 	void deleteNodeNeighbor(list<Vertex>::iterator pvertex)
 	{
-		cout<<"deleteNodeneighbor"<<pvertex->id<<endl;
+		//cout<<"deleteNodeneighbor"<<pvertex->id<<endl;
 		//for(list<Edge>::iterator neighbor_edge=(pvertex->edges).begin();neighbor_edge!=(pvertex->edges).end();neighbor_edge++)
 		//	cout<<neighbor_edge->end->id<<endl;
 		for(list<Edge>::iterator neighbor_edge=(pvertex->edges).begin();neighbor_edge!=(pvertex->edges).end();neighbor_edge++)
@@ -147,7 +156,7 @@ public:
 	}
 	void deleteNode(list<Vertex>::iterator pvertex,list<Vertex>::iterator not_delete)
 	{
-		cout<<"delete Node"<<pvertex->id<<endl;
+		//cout<<"delete Node"<<pvertex->id<<endl;
 
 		for(list<Edge>::iterator neighbor_edge=(pvertex->edges).begin();neighbor_edge!=(pvertex->edges).end();neighbor_edge++)
 		{
@@ -182,41 +191,56 @@ public:
 
 int main(int argc, char** argv)
 {
+<<<<<<< HEAD
+	//int n_vertices=200;
+=======
 	int n_vertices=10000;
+>>>>>>> ce1611e117f41f8764e7058aa5562dd09f345c77
 	double prob=0.5;
+	for (int n_vertices=10;n_vertices<1000000;n_vertices=n_vertices+50)
+	{
 	Graph G(n_vertices,prob);
-	G.showDegree();
+	//G.showDegree();
 	vector<list<Vertex>::iterator > chosen_set;
 	vector<int> independent_set;
-    double time;
-    cout<<"contruction end"<<endl;
-    int i=0;
+    //double time;
+    //cout<<"contruction end"<<endl;
+    //int i=0;
     //time = -omp_get_wtime();
-
+	auto start = std::chrono::system_clock::now();
 	//#pragma omp parallel for
 	clock_t t_start = clock();
 			while(!G.isEmpty()){
-				cout<<"round"<<++i<<endl;
+				//cout<<"round"<<++i<<endl;
 				G.set_randval();
-				cout<<"Rand val generated"<<endl;
+				//cout<<"Rand val generated"<<endl;
 				G.choose(chosen_set);
-				cout<<"The independent set nodes chosen"<<endl;
+				//cout<<"The independent set nodes chosen"<<endl;
 				//rep(i,0,chosen_set.size(),1)
 				//	cout<<chosen_set[i]->id<<endl;
 				for(vector<list<Vertex>::iterator >::iterator iter=chosen_set.begin();iter!=chosen_set.end();++iter)
 					independent_set.push_back((*iter)->id);
 				G.deleteSet(chosen_set.begin(),chosen_set.end());
-				cout<<" Nodes and neighbors deleted"<<endl;
+				//cout<<" Nodes and neighbors deleted"<<endl;
 				chosen_set.clear();
-				cout<<" Vertex size"<<G.vertices.size()<<endl;
+				//cout<<" Vertex size"<<G.vertices.size()<<endl;
           	}
-    cout<<"independent set found"<<endl;
-	rep(i,0,independent_set.size(),1)
-		std::cout<<"node"<<i<<"in MIS:\t"<<independent_set[i]<<std::endl;
-	cout<<chosen_set.size()<<endl;
+	auto end = std::chrono::system_clock::now();
+	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+	std::cout <<n_vertices<<"	"<<G.n_edges<<"		"<< elapsed.count() << std::endl;
+	independent_set.clear();
+	}
+    //cout<<"independent set found"<<endl;
+	//rep(i,0,independent_set.size(),1)
+		//std::cout<<"node"<<i<<"in MIS:\t"<<independent_set[i]<<std::endl;
+	//cout<<chosen_set.size()<<endl;
 	//time += omp_get_wtime();
+<<<<<<< HEAD
+	//std::cout<<"it took time:"<<time<<std::endl; 
+=======
 	clock_t t_end = clock();
 	double exe_time = (double)(t_end - t_start) / CLOCKS_PER_SEC;
 	std::cout<<"it took time:"<<exe_time<<std::endl;
+>>>>>>> ce1611e117f41f8764e7058aa5562dd09f345c77
     return 0;
 }
