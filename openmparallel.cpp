@@ -10,7 +10,7 @@
 #include<chrono>
 #include<algorithm>
 #define rep(i,a,b,c) for(int i=a;i<b;i+=c)
-
+#define Nthreads 4
 using namespace std;
 
 
@@ -43,19 +43,23 @@ using namespace std;
 		public:
 		V_iterator end;
 		E_iterator same_edge;
-		Edge(V_iterator y):end(y) {}
+		bool status;
+		Edge(V_iterator y):end(y),status(true) {}
+		Edge(){}
 	};
 
 class Graph {
 public:
 	friend void print_graph(Graph&);
 	int n_edges;
+	int n_;
 	vector<V_iterator> current_vertices; //vector containing the pointers to vertices present in the graph
 	list<Vertex> vertices;
   vector<vector<Edge>> EDGES;
 	//create the matrix
 	Graph(int n,double prob)//random graph G(n_vertices,prob) where prob is the probability that an edge exists
 	{
+		n_=n;
 		n_edges=0;
 		//vertices.reserve(n+2);
 		current_vertices.reserve(n);
@@ -120,7 +124,7 @@ public:
 
 	void set_randval()
 	{
-		#pragma omp parallel for
+		#pragma omp parallel for schedule(static) num_threads(Nthreads)
 		for(int i = 0 ; i<current_vertices.size();++i)
 		{
 			vector<V_iterator>::iterator iter = current_vertices.begin();
@@ -137,7 +141,7 @@ public:
 	void choose(vector<V_iterator> &chosen_set) //check this
 	{
 
-		#pragma omp parallel for
+		#pragma omp parallel for schedule(static) num_threads(Nthreads)
 		for(int i=0 ; i<current_vertices.size() ; ++i)
 		{
 			vector<V_iterator>::iterator iter=current_vertices.begin();
@@ -174,16 +178,9 @@ public:
 	{
 		for( E_iterator neighbor_edge=pvertex->edges->begin() ; neighbor_edge!=pvertex->edges->end() ; ++neighbor_edge)
 		{
-			//vector<Vertex>::iterator temp = neighbor_edge->end;
-			deleteNode(neighbor_edge->end,pvertex/*vertices.end()*/);
-			//if (pvertex==vertices.end())
-				//pvertex = temp;
+			deleteNode(neighbor_edge->end,pvertex);
 		}
-		//if (vertices.size()>1)
-		special_delete_node(pvertex);
-	//	update_current_vertices();
-		//else
-			//vertices.clear();
+		pvertex->status = false;
 		//std::cout << "Remaining graph after deletion of: " << pvertex->id << " and its neighbors \n";
 		//print_graph(*this);
 	}
@@ -195,44 +192,17 @@ public:
 		const E_iterator begining = pvertex->edges->begin();
 		//#pragma omp parallel
 		//{
-			#pragma omp parallel for //num_threads(4)
+			#pragma omp parallel for schedule(static) num_threads(Nthreads)
 			for( int i = 0 ; i<pvertex->edges->size() ; ++i)
 			{
 				E_iterator to_be_deleted = begining + i;
-				//if (to_be_deleted->end->status == true && to_be_deleted->end->edges->size() > 0 )
-				//{
 					if(to_be_deleted->end->id!=not_delete->id)
 					{
-						//std::cout << "Deleting the edge called for: " << temp << " -> " << to_be_deleted->end->id << "\n";
-						E_iterator End = to_be_deleted->end->edges->end();	--End;	//end of the edge list containing same edge, used for swap
-						E_iterator Betw = to_be_deleted->same_edge;
-						//std::cout << "To be swapped: ("<<Betw->end->id << "," << End->end->id << ")" << "\n";
-						if (End!=Betw)
-						{
-							//V_iterator* Betwend = &(Betw->end); V_iterator Endend = End->end;
-							//#pragma omp atomic
-							//*Betwend = Endend;
-							Betw->end = End->end; //manual swap
-							#pragma omp critical
-							{
-							Betw->same_edge = End->same_edge;	// this line has to be critical or atomic!!!!!!!!!!!!
-							}
-							//std::swap(*End,*Betw);
-							//std::cout << "Pointers swapped to: ("<<Betw->end->id << "," << End->end->id << ")" << "\n";
-							Betw->same_edge->same_edge = Betw;
-							//End->same_edge->same_edge = End;
-							//print_graph(*this);
-							to_be_deleted->end->edges->pop_back();
-						}
-						else
-						{
-							to_be_deleted->end->edges->pop_back(); //no need to fix the memory locations
-						}
-					//std::cout << "Remaining graph: " << std::endl; print_graph(*this);
+						//to_be_deleted->status = false; no need to delete this edge as the node for this is going to be deleted
+						to_be_deleted->same_edge->status = false;
 					}
-				//} // scope for trial
 			} //end of for loop
-		special_delete_node(pvertex);
+		pvertex->status = false;
 		//update_current_vertices();
 		//std::cout << " delete node ended \n" << std::endl;
 		//std::cout << "Remaining graph after deletion of node: " << temp <<" \n";
@@ -246,73 +216,57 @@ public:
 			deleteNodeNeighbor(*viter);
 		}
 		update_current_vertices();
-
+		update_edge_list();
 	}
-
-	void special_delete_edge( E_iterator to_be_deleted ) {
-		//std::cout << "deleting the edge : "<< to_be_deleted->end->id << " -> " << to_be_deleted->same_edge->end->id << std::endl;
-		//if (to_be_deleted->end->status == true && to_be_deleted->end->edges->size() > 0)
-		//{
-			E_iterator End = to_be_deleted->end->edges->end(); //end of the edge list containing same edge, used for swap
-			End--;
-			E_iterator Betw = to_be_deleted->same_edge;
-			//std::cout << "To be swapped: ("<<Betw->end->id << "," << End->end->id << ")" << "\n";
-			if (End!=Betw) {
-				//implement a manual swap
-				Betw->end = End->end;
-				Betw->same_edge = End->same_edge;
-				//std::cout << "Pointers swapped to: ("<<Betw->end->id << "," << End->end->id << ")" << "\n";
-	      Betw->same_edge->same_edge = Betw;
-				//print_graph(*this);
-				to_be_deleted->end->edges->pop_back();
-			}
-			else
-				to_be_deleted->end->edges->pop_back(); //no need to fix the memory locations
-			//std::cout << "Remaining graph: " << std::endl;
-			//print_graph(*this);
-		//}
-	}
-
-	void special_delete_node(V_iterator to_be_deleted ) {
-		/*if (vertices.size() > 1) {
-		std::cout << "Special delte node called for node: "<<to_be_deleted->id << std::endl;
-		V_iterator End = vertices.end();
-		--End;
-		if (to_be_deleted != End)
-		{
-			std::swap(*to_be_deleted,*End);
-			vertices.pop_back();
-			for (vector<Edge>::iterator iter = to_be_deleted->edges->begin() ; iter!=to_be_deleted->edges->end() ; ++iter)
-			{
-				iter->same_edge->same_edge = iter;
-				iter->same_edge->end = to_be_deleted;
-			}
-		}
-		else
-			vertices.pop_back();
-		std::cout << "Special delte node ended \n" << std::endl;
-	}*/
-	to_be_deleted->status = false;
-}
 
 void update_current_vertices() {
-	for ( vector<V_iterator>::iterator it = current_vertices.begin() ; it!=current_vertices.end() ;  )
+	vector<V_iterator> new_current_vertices; new_current_vertices.reserve(n_);
+	#pragma omp parallel for schedule(static) num_threads(Nthreads)
+	for (int i = 0 ; i<current_vertices.size() ; ++i )        	//for ( vector<V_iterator>::iterator it = current_vertices.begin() ; it!=current_vertices.end() ;  )
 	{
-		if ((*it)->status == false ) //not in the graph anymore
+		if ((current_vertices[i])->status == true && (current_vertices[i])->edges->size()>0 ) //still in the graph
 		{
-			vector<V_iterator>::iterator End = current_vertices.end();
-			--End;
-			std::swap(*it,*End);
-			current_vertices.pop_back();
+			#pragma omp critical
+			new_current_vertices.push_back(current_vertices[i]); //add to new_current_vertices vector
 		}
-		else
-		{
-			(*it)->label = 1;
-			++it;
-		}
+	}
+	unsigned int newsize = new_current_vertices.size(); //std::cout << "new current vertices size: " << newsize << std::endl;
+	#pragma omp parallel for schedule(static) num_threads(Nthreads)
+	for (int i = 0 ; i<newsize ; ++i )
+	{
+		current_vertices[i] = new_current_vertices[i];
+		current_vertices[i]->label = 1;
+	}
+	current_vertices.resize(newsize);
+}
 
+void update_edge_list() {
+	int size = current_vertices.size();
+
+	for (int i = 0 ; i<size ; ++i) //going over the current vertices
+	{
+		vector<Edge> temp; temp.reserve(n_);
+		unsigned int esize = current_vertices[i]->edges->size();
+		#pragma omp parallel for schedule(static) num_threads(Nthreads)
+		for (int j = 0; j<esize ; ++j)
+		{
+			if(current_vertices[i]->edges->operator[](j).status == true)
+			{
+				#pragma omp critical
+				temp.push_back(current_vertices[i]->edges->operator[](j));
+			}
+		}
+		unsigned int newsize = temp.size();
+		#pragma omp parallel for schedule(static) num_threads(Nthreads)
+		for (int j = 0; j<newsize ; ++j)
+		{
+			current_vertices[i]->edges->operator[](j) = temp[j];
+			current_vertices[i]->edges->operator[](j).same_edge->same_edge = current_vertices[i]->edges->begin() + j; //fixing the same edge
+		}
+		current_vertices[i]->edges->resize(newsize);
 	}
 }
+
 };
 
 void print_graph(Graph& G) {
@@ -402,7 +356,8 @@ int main(int argc, char** argv)
 				//cout<<" Nodes and neighbors deleted"<<endl;
 				chosen_set.clear();
 				//cout<<" Vertex size"<<G.vertices.size()<<endl;
-          	}
+          }
+					//independent_set.push_back(G.current_vertices[0]->id);
 	auto end = std::chrono::system_clock::now();
 	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 	std::cout <<n_vertices<<"	"<<G.n_edges<<"		"<< elapsed.count() << std::endl;
