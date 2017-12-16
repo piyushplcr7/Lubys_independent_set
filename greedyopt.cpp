@@ -95,7 +95,9 @@ int main() {
 //  std::cout << "Independent set vertices: " << std::endl;
 //  for (int i =0 ; i<independent_set.size() ; ++i)
   //  std::cout << independent_set[i] << " ";
-  std::cout<<std::endl;
-	std::cout <<"Independent set size: " << independent_set.size()<< " Calculated in: " << "		"<< elapsed.count() << " us"<< std::endl;
+  //std::cout<<std::endl;
+  std::ofstream output;
+  output.open("greedy_data.txt",'w');
+	output<<"Independent set size: " << independent_set.size()<< " Calculated in: " << "		"<< elapsed.count() << " us"<< std::endl;
 	return 0;
 }
