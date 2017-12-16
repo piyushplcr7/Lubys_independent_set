@@ -97,7 +97,8 @@ int main() {
   //  std::cout << independent_set[i] << " ";
   //std::cout<<std::endl;
   std::ofstream output;
-  output.open("greedy_data.txt",'w');
+  std::string filename = "greedy_data.txt" ;
+  output.open(filename,std::ofstream::out);
 	output<<"Independent set size: " << independent_set.size()<< " Calculated in: " << "		"<< elapsed.count() << " us"<< std::endl;
 	return 0;
 }
